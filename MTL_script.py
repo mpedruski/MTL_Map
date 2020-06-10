@@ -1,8 +1,26 @@
 import random
 import logging
+from sklearn.feature_extraction.text import TfidfVectorizer
+from nltk.corpus import stopwords
+import numpy as np
+
 from MTL_data import *
 
 logging.basicConfig(level=logging.CRITICAL,format='%(asctime)s - %(levelname)s - %(message)s')
+
+def yes_no_input(initial_message):
+    '''
+    -> str
+    Prints out an initial message that requires a Y or N answer, and
+    verifies that the user's input is one of those two options, returning
+    the answer'''
+    answer = input(initial_message).upper()
+    print("")
+    while answer not in {"Y","N"}:
+        print("Oops, looks like you made a typo.")
+        answer = input(initial_message).upper()
+        print("")
+    return answer
 
 def initiate_program():
     '''Greets user and initiates one of the two walking tours following the
@@ -25,6 +43,21 @@ def initiate_program():
         the spatial walking tour. It's great. We promise. \n''')
         choice = 1
     return choice
+
+def text_distance(locations):
+    '''Generates a matrix of cosine similarity between stories associated with
+    each location'''
+    documents = []
+    final_stops = stopwords.words('french') + stopwords.words('english')
+    for i in locations:
+        documents.append(i.story)
+    tfidf = TfidfVectorizer(min_df=1,stop_words=final_stops).fit_transform(documents)
+    pairwise_similarity = tfidf * tfidf.T
+
+    arr = pairwise_similarity.A
+    np.fill_diagonal(arr,np.nan)
+    return arr
+
 
 def dist_matrix(locations, metric):
     '''Returns a matrix of distances between locations depending on the metric
@@ -98,11 +131,7 @@ def next_step(index, lat_matrix, long_matrix, euc_matrix):
     and euclidean distance.'''
 
     print("")
-    print("Keep going? (Y/N)")
-    keep_going = input()
-    while keep_going not in ("Y", "N", "y", "n"):
-        print("Oops, seems like you made a typo. Choose Y or N.")
-        keep_going = input().upper()
+    keep_going = yes_no_input("Keep going? (Y/N) \n")
     if keep_going == "Y":
         keep_going = True
         show_the_options()
@@ -186,9 +215,14 @@ def spatial_walking_tour(index, locations):
         locations[index].output()
         index, keep_going = next_step(index, lat_matrix, long_matrix, euc_matrix)
 
+def emotional_walking_tour(index, locations):
+    pass
+
+
 if __name__ == "__main__":
 
     tour = initiate_program()
+    text_distance(locations)
     index = initiate_walking_tour(locations)
     if tour == 1:
         spatial_walking_tour(index, locations)
