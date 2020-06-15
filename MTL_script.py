@@ -1,8 +1,5 @@
 import random
 import logging
-from sklearn.feature_extraction.text import TfidfVectorizer
-from nltk.corpus import stopwords
-import numpy as np
 
 from MTL_data import *
 
@@ -43,21 +40,6 @@ def initiate_program():
         the spatial walking tour. It's great. We promise. \n''')
         choice = 1
     return choice
-
-def text_distance(locations):
-    '''Generates a matrix of cosine similarity between stories associated with
-    each location'''
-    documents = []
-    final_stops = stopwords.words('french') + stopwords.words('english')
-    for i in locations:
-        documents.append(i.story)
-    tfidf = TfidfVectorizer(min_df=1,stop_words=final_stops).fit_transform(documents)
-    pairwise_similarity = tfidf * tfidf.T
-
-    arr = pairwise_similarity.A
-    np.fill_diagonal(arr,np.nan)
-    return arr
-
 
 def dist_matrix(locations, metric):
     '''Returns a matrix of distances between locations depending on the metric
@@ -222,7 +204,6 @@ def emotional_walking_tour(index, locations):
 if __name__ == "__main__":
 
     tour = initiate_program()
-    text_distance(locations)
     index = initiate_walking_tour(locations)
     if tour == 1:
         spatial_walking_tour(index, locations)
