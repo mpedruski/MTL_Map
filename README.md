@@ -39,4 +39,6 @@ Files used in this project include:
 
 * MTL_script.py: Currently this file includes all the functionality for navigating between the different locations, each of which is an instance of the Location class I've written.
 
-* MTL_data.py: While not included in the repo yet, this contains the Location class definition as well as the data to define all the instances of location that are imported by MTL_script.py
+* MTL_Classes.py: Contains the Location class definition called by MTL_data.py.
+
+* MTL_data.py: While not included in the repo yet, this calls MTL_Classes.py and contains the data to define all the instances of location that are imported by MTL_script.py
