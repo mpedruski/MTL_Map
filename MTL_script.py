@@ -5,6 +5,8 @@ from MTL_data import *
 
 logging.basicConfig(level=logging.CRITICAL,format='%(asctime)s - %(levelname)s - %(message)s')
 
+### Input sanitization functions
+
 def yes_no_input(initial_message):
     '''
     -> str
@@ -19,6 +21,21 @@ def yes_no_input(initial_message):
         print("")
     return answer
 
+def choice_sanitization(option_set):
+    '''{set} -> int
+    Accepts a set of options, and returns an integer within the range 0,
+    len(set) - 1. Prompts the user to try again if they make illegal input.
+    '''
+    valid_choices = [str(i) for i in range(len(option_set))]
+    choice = input()
+    while choice not in valid_choices:
+        print('''Oops, looks like you made an error. Choose one of the numbers
+        available to you.''')
+        choice = input()
+    return int(choice)
+
+### Initiation of program and tours
+
 def initiate_program():
     '''Greets user and initiates one of the two walking tours following the
     user's choice.'''
@@ -27,19 +44,51 @@ def initiate_program():
     print("Please choose the kind of tour you would like to be on:")
     print("1) A spatial walking tour")
     print("2) An emotional walking tour")
+    print("3) A temporal walking tour")
 
     print("\n Please enter your choice as an integer:\n")
 
     choice = input()
-    while choice not in ("1", "2"):
+    while choice not in ("1", "2", "3"):
         print("Oops, try again")
         choice = input()
     choice = int(choice)
-    while choice != 1:
-        print('''\n Sorry, the emotional walking tour isn't online yet. Try
-        the spatial walking tour. It's great. We promise. \n''')
-        choice = 1
+
     return choice
+
+### Common functions
+def give_user_options(options):
+    '''Prints options for movement for user and returns length of options list
+    for input verification'''
+    print("Where do you want to go now?")
+    for i in options:
+        print(i)
+    return len(options)
+
+### Spatial walking tour functions
+
+def initiate_walking_tour(locations):
+    '''Given the list of locations on the walking tour, offer the user the choice
+    of the neighbourhood to start in, and then start the tour at the first
+    location in that neighbourhood (in terms of location in the array).
+    Returns the index of this first tour location.'''
+    ### List of unique neighbourhoods for user to choose from
+    quartiers = list({i.quartier for i in locations})
+    print("What neighbourhood would you like to start in? Your options are: \n")
+    for i in range(len(quartiers)):
+        print("{}) {}".format(i, quartiers[i]))
+    ### Input sanitization
+    valid_choices = [str(i) for i in range(len(quartiers))]
+    choice = input()
+    while choice not in valid_choices:
+        print('''Oops, looks like you made an error. Choose one of the numbers
+        available to you.''')
+        choice = input()
+    ### Return index of first location in locations to satistfy neighbourhood
+    choice = quartiers[int(choice)]
+    for i in range(len(locations)):
+        if locations[i].quartier == choice:
+            return i
 
 def dist_matrix(locations, metric):
     '''Returns a matrix of distances between locations depending on the metric
@@ -111,14 +160,16 @@ def next_step(index, lat_matrix, long_matrix, euc_matrix):
     indicating if tour should continue (keep_going). Takes as arguments current
     location (index), and matrices of distance according to latitude, longitude,
     and euclidean distance.'''
+    options = ["1) I want to go north.", "2) I want to go east.", "3) I want to go south.",
+        "4) I want to go west.", "5) Take me to whatever is closest.","6) I don't care, take me anywhere."]
 
     print("")
     keep_going = yes_no_input("Keep going? (Y/N) \n")
     if keep_going == "Y":
         keep_going = True
-        show_the_options()
+        val = give_user_options(options)
         choice = input()
-        while choice not in ("1", "2", "3", "4", "5", "6"):
+        while choice not in ([str(i) for i in range(val+1)]):
             print("Oops, seems like you made a typo. Choose a number from 1 to 6:")
             choice = input()
         if int(choice) == 1:
@@ -140,17 +191,6 @@ def next_step(index, lat_matrix, long_matrix, euc_matrix):
     logging.debug("Next location: {}".format(next_location))
     return next_location, keep_going
 
-def show_the_options():
-    '''Simply prints options for movement for user'''
-
-    print("Where do you want to go now?")
-    print("1) I want to go north.")
-    print("2) I want to go east.")
-    print("3) I want to go south.")
-    print("4) I want to go west.")
-    print("5) Take me to whatever is closest.")
-    print("6) I don't care, take me anywhere.")
-
 def go_anywhere(current_location):
     ''' Returns a random index for a location that is not the current_location'''
     next_location = current_location
@@ -159,37 +199,11 @@ def go_anywhere(current_location):
     logging.debug("Next destination - random: {}".format(next_location))
     return next_location
 
-def initiate_walking_tour(locations):
-    '''Given the list of locations on the walking tour, offer the user the choice
-    of the neighbourhood to start in, and then start the tour at the first
-    location in that neighbourhood (in terms of location in the array).
-    Returns the index of this first tour location.'''
-    ### List of unique neighbourhoods for user to choose from
-    quartiers = list({i.quartier for i in locations})
-    print("What neighbourhood would you like to start in? Your options are: \n")
-    for i in range(len(quartiers)):
-        print("{}) {}".format(i, quartiers[i]))
-    ### Input sanitization
-    valid_choices = [str(i) for i in range(len(quartiers))]
-    choice = input()
-    while choice not in valid_choices:
-        print('''Oops, looks like you made an error. Choose one of the numbers
-        available to you.''')
-        choice = input()
-    ### Return index of first location in locations to satistfy neighbourhood
-    choice = quartiers[int(choice)]
-    for i in range(len(locations)):
-        if locations[i].quartier == choice:
-            return i
-
-def spatial_walking_tour(index, locations):
-    ''' Function that implements all spatial walking tour functionality'''
+def spatial_walking_tour(index, locations, lat_matrix, long_matrix, euc_matrix):
+    '''Prints output of spatial tour and calls next_step to determine if user
+    wants to keep going and if so, what the next location is'''
     logging.debug("Working")
-    ### Distances between locations in latitude, longitude, euclidean
-    lat_matrix = dist_matrix(locations, "lat")
-    long_matrix = dist_matrix(locations, "long")
-    euc_matrix = euclidean_dist(lat_matrix, long_matrix)
-    ### At beginning of tour kee_going = True, after that print location output
+    ### At beginning of tour keep_going = True, after that print location output
     ### reassess whether to continue, and index of next location
     ### repeat until tour terminated by user
     keep_going = True
@@ -197,13 +211,95 @@ def spatial_walking_tour(index, locations):
         locations[index].output()
         index, keep_going = next_step(index, lat_matrix, long_matrix, euc_matrix)
 
-def emotional_walking_tour(index, locations):
-    pass
+def emotional_walking_tour():
+    print('''\n Sorry, the emotional walking tour isn't online yet. Try
+    the spatial walking or the temporal walking tour. They're great. We promise.''')
+    return control_flow()
+
+### Temporal walking tour functions
+
+def initiate_temporal_tour(locations):
+    years = sorted(list({i.year for i in locations}))
+    print("What year would you like to start the tour in? Your options are: \n")
+    for i in range(len(years)):
+        print("{}) {}".format(i, years[i]))
+    choice = choice_sanitization(years)
+    ### Return index of first location in locations to satistfy choice
+    chosen_year = years[choice]
+    for i in range(len(locations)):
+        if locations[i].year == chosen_year:
+            return i
+
+def temporal_walking_tour(index, locations):
+
+    ### At beginning of tour keep_going = True, after that print location output
+    ### reassess whether to continue, and index of next location
+    ### repeat until tour terminated by user
+    keep_going = True
+    while keep_going == True:
+        locations[index].output()
+        index, keep_going = temporal_progress(index)
+
+def temporal_progress(index):
+    options = ["1) I want to go forward in time.", "2) I want to go back in time.",
+        "3) I want to visit winter.", "4) I want to visit spring.",
+        "5) I want to visit summer.", "6) I want to visit autumn.",
+        "7) I don't care, take me anywhere."]
+    print("")
+    keep_going = yes_no_input("Keep going? (Y/N) \n")
+    if keep_going == "Y":
+        keep_going = True
+        val = give_user_options(options)
+        choice = input()
+        while choice not in ([str(i) for i in range(val+1)]):
+            print("Oops, seems like you made a typo. Choose a number from 1 to 6:")
+            choice = input()
+        if choice == "1":
+            # Determine if there are later locations in the same year, if not
+            # look for later years
+            next_location = 0
+        elif choice == "2":
+            # Determine if there are earlier locations in the same year, if not
+            # look for earlier years
+            next_location = 0
+        elif choice == "3":
+            # Choose any location that has a month 12, 1, or 2
+            next_location = 0
+        elif choice == "4":
+            # Choose any location that has month == 3, 4, 5
+            next_location = 0
+        elif choice == "5":
+            # Choose any location that has month == 6, 7, 8
+            next_location = 0
+        elif choice == "6":
+            # Choose any location that has month == 9, 10, 11
+            next_location = 0
+        else:
+            next_location = go_anywhere(index)
+    else:
+        next_location = 0
+        keep_going = False
+        print("See you next time!")
+    logging.debug("Next location: {}".format(next_location))
+    return next_location, keep_going
+
+
+
+
+def control_flow():
+    tour = initiate_program()
+    if tour == 1:
+        index = initiate_walking_tour(locations)
+        ### Distances between locations in latitude, longitude, euclidean
+        lat_matrix, long_matrix = dist_matrix(locations, "lat"), dist_matrix(locations, "long")
+        euc_matrix = euclidean_dist(lat_matrix, long_matrix)
+        spatial_walking_tour(index, locations, lat_matrix, long_matrix, euc_matrix)
+    elif tour == 2:
+        emotional_walking_tour()
+    else:
+        index = initiate_temporal_tour(locations)
+        temporal_walking_tour(index, locations)
 
 
 if __name__ == "__main__":
-
-    tour = initiate_program()
-    index = initiate_walking_tour(locations)
-    if tour == 1:
-        spatial_walking_tour(index, locations)
+    control_flow()
