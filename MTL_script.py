@@ -230,7 +230,71 @@ def initiate_temporal_tour(locations):
         if locations[i].year == chosen_year:
             return i
 
-def temporal_walking_tour(index, locations):
+def temporal_organization(locations):
+    '''Returns a list of timepoints (summed number of months since timepoint 0)
+     for each location'''
+    # '''Returns a dictionary in which each location index is the key, and the
+    # timepoint (summed number of months since timepoint 0) is the value.'''
+    # timepoints = {i: (locations[i].year - 2002)*12 + locations[i].month for i in range(len(locations))}
+    timepoints = [(i.year - 2002)*12 + i.month for i in locations]
+    return timepoints
+
+def time_travel(index, timepoints, mode):
+    ### calculation of timediff could be refactored into a matrix calculated
+    ### just once at the beginning of temporal mode
+    timediff = [i - timepoints[index] for i in timepoints]
+    if mode == "forward":
+        next_step = move_forward(timediff, index)
+    else:
+        next_step = move_backward(timediff, index)
+    return next_step
+
+def move_forward(timediff, index):
+    if max(timediff) < 1:
+        print("Sorry, you can't go forward in time")
+        ind = index
+    else:
+        min_diff = 100 ## an arbitrarily large number
+        for i in range(len(timediff)):
+            if timediff[i] > 0 and timediff[i] < min_diff:
+                ind, min_diff = i, timediff[i]
+    return ind
+
+def move_backward(timediff, index):
+    if min(timediff) > -1:
+        print("Sorry, you can't go back in time")
+        ind = index
+    else:
+        min_diff = 100 ## an arbitrarily large number
+        for i in range(len(timediff)):
+            if timediff[i] < 0 and timediff[i] < min_diff:
+                ind, min_diff = i, abs(timediff[i])
+    return ind
+
+def random_season_selector(locations, mode):
+    '''Return a random location from the sublist of locations of a given season'''
+
+    if mode == "winter":
+        options = {12, 1, 2}
+    elif mode == "spring":
+        options = {3,4,5}
+    elif mode == "summer":
+        options = {6,7,8}
+    else:
+        options = {9, 10, 11}
+
+    season_locations = [i for i in range(len(locations)) if locations[i].month in options]
+    ind = season_locations[random.randrange(0,len(season_locations))]
+
+    return ind
+
+
+
+
+
+
+
+def temporal_walking_tour(index, locations, timepoints):
 
     ### At beginning of tour keep_going = True, after that print location output
     ### reassess whether to continue, and index of next location
@@ -238,9 +302,9 @@ def temporal_walking_tour(index, locations):
     keep_going = True
     while keep_going == True:
         locations[index].output()
-        index, keep_going = temporal_progress(index)
+        index, keep_going = temporal_progress(index, timepoints, locations)
 
-def temporal_progress(index):
+def temporal_progress(index, timepoints, locations):
     options = ["1) I want to go forward in time.", "2) I want to go back in time.",
         "3) I want to visit winter.", "4) I want to visit spring.",
         "5) I want to visit summer.", "6) I want to visit autumn.",
@@ -255,25 +319,21 @@ def temporal_progress(index):
             print("Oops, seems like you made a typo. Choose a number from 1 to 6:")
             choice = input()
         if choice == "1":
-            # Determine if there are later locations in the same year, if not
-            # look for later years
-            next_location = 0
+            next_location = time_travel(index, timepoints, "forward")
         elif choice == "2":
-            # Determine if there are earlier locations in the same year, if not
-            # look for earlier years
-            next_location = 0
+            next_location = time_travel(index, timepoints, "backwards")
         elif choice == "3":
+            next_location = random_season_selector(locations, "winter")
             # Choose any location that has a month 12, 1, or 2
-            next_location = 0
         elif choice == "4":
+            next_location = random_season_selector(locations, "spring")
             # Choose any location that has month == 3, 4, 5
-            next_location = 0
         elif choice == "5":
             # Choose any location that has month == 6, 7, 8
-            next_location = 0
+            next_location = random_season_selector(locations, "summer")
         elif choice == "6":
             # Choose any location that has month == 9, 10, 11
-            next_location = 0
+            next_location = random_season_selector(locations, "fall")
         else:
             next_location = go_anywhere(index)
     else:
@@ -283,8 +343,7 @@ def temporal_progress(index):
     logging.debug("Next location: {}".format(next_location))
     return next_location, keep_going
 
-
-
+### General functions
 
 def control_flow():
     tour = initiate_program()
@@ -298,7 +357,8 @@ def control_flow():
         emotional_walking_tour()
     else:
         index = initiate_temporal_tour(locations)
-        temporal_walking_tour(index, locations)
+        timepoints = temporal_organization(locations)
+        temporal_walking_tour(index, locations, timepoints)
 
 
 if __name__ == "__main__":
