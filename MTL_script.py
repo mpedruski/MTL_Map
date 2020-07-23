@@ -1,5 +1,9 @@
 import random
 import logging
+from sklearn.feature_extraction.text import TfidfVectorizer
+from nltk.corpus import stopwords
+import re
+import numpy as np
 
 from MTL_data import *
 
@@ -211,10 +215,40 @@ def spatial_walking_tour(index, locations, lat_matrix, long_matrix, euc_matrix):
         locations[index].output()
         index, keep_going = next_step(index, lat_matrix, long_matrix, euc_matrix)
 
-def emotional_walking_tour():
-    print('''\n Sorry, the emotional walking tour isn't online yet. Try
-    the spatial walking or the temporal walking tour. They're great. We promise.''')
-    return control_flow()
+def emotional_distances(locations):
+    texts = [i.story.lower().replace("\n", "") for i in locations]
+    texts = [re.sub(' +', ' ', i) for i in texts]
+    final_stops = stopwords.words('french') + stopwords.words('english')
+    tfidf = TfidfVectorizer(min_df=1,stop_words=final_stops).fit_transform(texts)
+    pairwise_similarity = tfidf * tfidf.T
+    arr = pairwise_similarity.A
+    np.fill_diagonal(arr,np.nan)
+    return arr
+
+def closest_text(index, distance_array):
+    max_dist = 0
+    distances = distance_array[index]
+    for i in range(len(distances)):
+        if distances[i] > max_dist and i != index:
+            max_dist = distances[i]
+            next_location = i
+    return next_location
+
+def emotional_walking_tour(index, locations, emotional_distances):
+        keep_going = True
+        while keep_going == True:
+            locations[index].output()
+            index, keep_going = emotional_next_step(index, emotional_distances)
+        print("Ok! See you next time!")
+
+def emotional_next_step(index, emotional_distances):
+    index = closest_text(index, emotional_distances)
+    choice = yes_no_input("Keep going? (Y/N) \n")
+    if choice == "Y":
+        keep_going = True
+    else:
+        keep_going = False
+    return index, keep_going
 
 ### Temporal walking tour functions
 
@@ -354,7 +388,9 @@ def control_flow():
         euc_matrix = euclidean_dist(lat_matrix, long_matrix)
         spatial_walking_tour(index, locations, lat_matrix, long_matrix, euc_matrix)
     elif tour == 2:
-        emotional_walking_tour()
+        dist = emotional_distances(locations)
+        index = initiate_walking_tour(locations)
+        emotional_walking_tour(index, locations, dist)
     else:
         index = initiate_temporal_tour(locations)
         timepoints = temporal_organization(locations)
