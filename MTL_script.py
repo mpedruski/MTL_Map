@@ -225,24 +225,26 @@ def emotional_distances(locations):
     np.fill_diagonal(arr,np.nan)
     return arr
 
-def closest_text(index, distance_array):
+def closest_text(index, distance_array, prev_location):
     max_dist = 0
     distances = distance_array[index]
     for i in range(len(distances)):
-        if distances[i] > max_dist and i != index:
+        if distances[i] > max_dist and i != prev_location:
             max_dist = distances[i]
             next_location = i
     return next_location
 
-def emotional_walking_tour(index, locations, emotional_distances):
+def emotional_walking_tour(index, locations, emotional_distances, prev_location):
         keep_going = True
         while keep_going == True:
             locations[index].output()
-            index, keep_going = emotional_next_step(index, emotional_distances)
+            holder = prev_location
+            prev_location = index
+            index, keep_going = emotional_next_step(index, emotional_distances, holder)
         print("Ok! See you next time!")
 
-def emotional_next_step(index, emotional_distances):
-    index = closest_text(index, emotional_distances)
+def emotional_next_step(index, emotional_distances, prev_location):
+    index = closest_text(index, emotional_distances, prev_location)
     choice = yes_no_input("Keep going? (Y/N) \n")
     if choice == "Y":
         keep_going = True
@@ -388,9 +390,10 @@ def control_flow():
         euc_matrix = euclidean_dist(lat_matrix, long_matrix)
         spatial_walking_tour(index, locations, lat_matrix, long_matrix, euc_matrix)
     elif tour == 2:
+        prev_location = 100 ### Arbitray first value for emotional tour
         dist = emotional_distances(locations)
         index = initiate_walking_tour(locations)
-        emotional_walking_tour(index, locations, dist)
+        emotional_walking_tour(index, locations, dist, prev_location)
     else:
         index = initiate_temporal_tour(locations)
         timepoints = temporal_organization(locations)
