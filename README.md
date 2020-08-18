@@ -10,15 +10,16 @@ on the city, and hear why they're important to me.
 
 ## Vision
 
-My vision for the project involves two separate ways of navigating Montréal:
+My vision for the project involves three separate ways of navigating Montréal:
 
-* A spatial walking tour that allows users to move through Montréal a bit like
-someone might move through it while walking.
 
-* An 'emotional' walking tour that would attempt to link spaces not by physical proximity, but by how they are linked in memory. The goal would be a bit to present the tour of Montréal a bit as if one were reading *À la recherche du temps perdu* or
-*Mrs. Dalloway*.
+* A spatial walking tour that allows users to move through Montréal a bit like someone might move through it while walking. The user can choose to move north, south, east, west, to the closest location, or to a random location.
 
-I would like the project to have significant visual and textual elements:
+* An temporal walking tour that allows users to move forward or backward in time, as well as visits to random locations from each of the four seasons.
+
+* An 'emotional' walking tour that doesn't link spaces by physical or temporal proximity, but by how they are linked in memory. The goal would be a bit to present the tour of Montréal a bit as if one were reading *À la recherche du temps perdu* or *Mrs. Dalloway*. The current implementation of this leads the user to the memory with the highest cosine similarity to the current memory (unless that was the preceding memory).
+
+Ultimately I would like the project to have significant visual and textual elements:
 
 * A map showing users where they are in MTL, and what other locations are available (along with some animation showing the trip between the two to make the transitions more felt).
 
@@ -26,12 +27,11 @@ I would like the project to have significant visual and textual elements:
 
 * Text accompanying each location.
 
-Ultimately I can imagine the tour being deployed as a website after a transition to Rust once I have the framework worked out in Python (the project in part took off because I wanted something to work on in Rust).
+I can imagine the tour being deployed as a website after the ongoing transition to Rust is complete (the project in part took off because I wanted something to work on in Rust).
 
 ## Current status
 
-Currently the project is a Python based text-only tour that allows the user to move between locations along the cardinal directions. The data file is still being written,
-but if you really want to try the tour in it's current state let me know and I'll see what I can do.
+The spatial and temporal walking tours are complete, while the emotional walking tour has basic functionality.
 
 ## Files
 

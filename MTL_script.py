@@ -324,12 +324,6 @@ def random_season_selector(locations, mode):
 
     return ind
 
-
-
-
-
-
-
 def temporal_walking_tour(index, locations, timepoints):
 
     ### At beginning of tour keep_going = True, after that print location output
