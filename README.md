@@ -41,4 +41,6 @@ Files used in this project include:
 
 * MTL_Classes.py: Contains the Location class definition called by MTL_data.py.
 
-* MTL_data.py: While not included in the repo yet, this calls MTL_Classes.py and contains the data to define all the instances of location that are imported by MTL_script.py
+* MTL_data.py: Includes dummy memories to demonstrate functionality. In the actual distribution there would be more memories, and much more extensive descriptions of each.
+
+* MTL_py2rust.py: A script that uses regex to convert Python Location objects into Rust Location structs. This file isn't strictly necessary for the functionality of either the Python or the Rust versions of this project, but provides an easy way to convert the locations written in Python into ones that can be used for the Rust project (this reflects how initial development was done in Python with conversion to Rust once functionality was established).
