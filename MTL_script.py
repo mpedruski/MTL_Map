@@ -4,6 +4,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.corpus import stopwords
 import re
 import numpy as np
+import pandas as pd
+import time
 
 from MTL_data import *
 
@@ -37,6 +39,45 @@ def choice_sanitization(option_set):
         available to you.''')
         choice = input()
     return int(choice)
+
+### Plotting functions
+
+def gen_map_coordinates(file):
+    # read file into pandas datatframe
+    df = pd.read_csv(file)
+    # Get absolutes for standardization of new data points:
+    min_lat, min_long, max_lat = min(df["Latitude"]), min(df["Longitude"]), max(df["Latitude"])
+    # Standardize latitude data
+    df["Latitude"] = round((df["Latitude"]-(min(df["Latitude"])))*100).astype(int)
+    df["Longitude"] = round((df["Longitude"]-min(df["Longitude"]))*100).astype(int)
+    # Convert to lists for easier plotting
+    y,x = df["Longitude"].tolist(), df["Latitude"].tolist()
+    x = [max(x)-i for i in x] ## Final adjustment to latitude for N-S flip
+    return x, y, min_lat, min_long, max_lat
+
+def plot_map_coordinates(x, y, min_lat, min_long, max_lat, addl_coord=['None','None']):
+    # Standardize additional lat, long coords and add to lists
+    if addl_coord != ['None','None']:
+        x.append(int(round(max_lat)) - int(round((addl_coord[0]-min_lat)*100)))
+        y.append(int(round((addl_coord[1]-min_long)*100)))
+    # Plot each coordinate
+    for i in range(max(x)): ## Go through each of the possible latitudes
+        if i in x: ## Does a latitude exist in the set of coords?
+            coords = []
+            for j in range(len(x)): ## Go through each of the latitudes to see if they equal the value being plotted
+                if x[j] == i:
+                    coords.append(y[j]) ## if they do equal latitude being plotted, find out their corresponding y coordinate (longitude)
+            for j in range(max(y)): ## Go through each of the possible longitudes
+                if j in coords: ## If the iterator longitude is found in coords for this latitude plot *, otherwise plot a space
+                    print("*",end="")
+                else:
+                    print(" ",end="")
+            print("")
+        else:
+            print(" "*max(y))
+    for i in range(3):
+        print("")
+    time.sleep(1)
 
 ### Initiation of program and tours
 
@@ -376,6 +417,8 @@ def temporal_progress(index, timepoints, locations):
 ### General functions
 
 def control_flow():
+    border_latitude, border_longitude, min_lat, min_long, max_lat = gen_map_coordinates("MTL_borders.csv")
+    plot_map_coordinates(border_latitude, border_longitude, min_lat, min_long, max_lat, ["None","None"])
     tour = initiate_program()
     if tour == 1:
         index = initiate_walking_tour(locations)
